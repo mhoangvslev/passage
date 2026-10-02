@@ -72,6 +72,10 @@
       <groupId>fr.gdd</groupId>
       <artifactId>passage-blazegraph</artifactId>
     </dependency>
+    <dependency>
+      <groupId>fr.gdd</groupId>
+      <artifactId>passage-hdt</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
