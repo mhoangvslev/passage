@@ -32,6 +32,7 @@ public class RawOpExecutorFactory implements OpExecutorFactory {
 
     private static final Symbol userTimeoutSymbol = Symbol.create("timeout");
     private static final Symbol userAttemptsSymbol = Symbol.create("attempts");
+    private static final Symbol userBudgetSymbol = Symbol.create("budget"); // HeFQUIN-FRAW's name for attempts
 
     public static class OpExecutorWrapper extends OpExecutor {
 
@@ -51,6 +52,11 @@ public class RawOpExecutorFactory implements OpExecutorFactory {
                 ec.getContext().remove(userTimeoutSymbol); // Cleaning up the context
                 long serverTimeout = ec.getContext().getLong(RawConstants.TIMEOUT, Long.MAX_VALUE);
                 ec.getContext().set(RawConstants.TIMEOUT, Math.min(serverTimeout, userTimeout));
+            }
+
+            if (ec.getContext().isDefined(userBudgetSymbol)) {
+                ec.getContext().setIfUndef(userAttemptsSymbol, ec.getContext().get(userBudgetSymbol));
+                ec.getContext().remove(userBudgetSymbol);
             }
 
             if (ec.getContext().isDefined(userAttemptsSymbol)) {
