@@ -38,7 +38,7 @@
     <module>passage-commons</module>
     <!-- backends -->
     <module>passage-blazegraph</module> <!-- the main backend for now -->
-    <!-- <module>passage-hdt</module> --> <!-- uncomment when issue_#7 is solved -->
+    <module>passage-hdt</module>
     <!-- <module>raw-tdb2</module> --> <!-- TODO update to current version -->
     <!-- engines -->
     <module>passage-volcano</module>

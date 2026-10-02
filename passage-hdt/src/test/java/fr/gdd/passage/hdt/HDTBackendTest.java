@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -110,7 +111,6 @@ class HDTBackendTest {
         backend.close();
     }
 
-    @Disabled("Cannot skip on any triple pattern index.")
     @Test
     public void getting_random_elements_from_an_iterator () throws Exception {
         HDTBackend backend = new HDTBackend(HDTInMemoryDatasetsFactory.triples9());
@@ -158,6 +158,23 @@ class HDTBackendTest {
 //        }
 //        log.debug("remaining {}", remaining);
 
+        backend.close();
+    }
+
+    @Test
+    public void terms_are_returned_as_in_ntriples () throws Exception {
+        // As produced by rdf2hdt: IRIs are stored without brackets.
+        HDTBackend backend = new HDTBackend(HDTInMemoryDatasetsFactory.getDataset(List.of(
+                "http://Alice http://age \"42\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+                "http://Alice http://knows _:b0")));
+        HDTIterator it = (HDTIterator) backend.search(backend.any(), backend.getId("http://age", SPOC.PREDICATE), backend.any());
+        it.next();
+        assertEquals("<http://Alice>", it.getString(SPOC.SUBJECT));
+        assertEquals("<http://age>", it.getString(SPOC.PREDICATE));
+        assertEquals("\"42\"^^<http://www.w3.org/2001/XMLSchema#integer>", it.getString(SPOC.OBJECT));
+        it = (HDTIterator) backend.search(backend.any(), backend.getId("http://knows", SPOC.PREDICATE), backend.any());
+        it.next();
+        assertEquals("_:b0", it.getString(SPOC.OBJECT));
         backend.close();
     }
 }
