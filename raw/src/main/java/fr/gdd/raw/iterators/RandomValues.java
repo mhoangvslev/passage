@@ -103,7 +103,7 @@ public class RandomValues<ID, VALUE> implements Iterator<BackendBindings<ID, VAL
 
     @Override
     public BackendBindings<ID, VALUE> next() {
-        BackendBindings random = compatibleValues.get((new Random()).nextInt(compatibleValues.size()));
+        BackendBindings random = compatibleValues.get(RawConstants.random(context).nextInt(compatibleValues.size()));
 
         BackendBindings<ID,VALUE> binding = new BackendBindings<>(
                 random, // copy

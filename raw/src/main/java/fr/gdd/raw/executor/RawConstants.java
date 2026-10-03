@@ -4,6 +4,9 @@ import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ExecutionContext;
 import org.apache.jena.sparql.util.Context;
 import org.apache.jena.sparql.util.Symbol;
+import java.util.Objects;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class RawConstants {
 
@@ -33,6 +36,16 @@ public class RawConstants {
     static public final Symbol MAX_THREADS = allocConstantSymbol("MaxThread");
 
     static public final Symbol FORCE_ORDER = allocConstantSymbol("ForceOrder");
+
+    static public final Symbol RANDOM = allocVariableSymbol("Random"); // seeded random source of the query, if any
+
+    /**
+     * @return The random source of the query when seeded, else a thread-local one.
+     */
+    public static Random random(ExecutionContext context) {
+        Random seeded = context.getContext().get(RANDOM);
+        return Objects.isNull(seeded) ? ThreadLocalRandom.current() : seeded;
+    }
 
     static public final Var MAPPING_PROBABILITY = Var.alloc("probabilityOfRetrievingRestOfMapping");
 
