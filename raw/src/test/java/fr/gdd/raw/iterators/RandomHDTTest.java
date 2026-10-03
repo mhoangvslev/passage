@@ -2,6 +2,7 @@ package fr.gdd.raw.iterators;
 
 import fr.gdd.passage.commons.utils.MultisetResultChecking;
 import fr.gdd.passage.hdt.HDTBackend;
+import fr.gdd.passage.hdt.HDTIterator;
 import fr.gdd.passage.hdt.datasets.HDTInMemoryDatasetsFactory;
 import fr.gdd.raw.RawOpExecutorUtils;
 import fr.gdd.raw.executor.RawConstants;
@@ -130,6 +131,31 @@ public class RandomHDTTest {
         assertTrue(results.stream().anyMatch(r -> r.contains("reptile")));
         assertTrue(results.stream().filter(r -> r.contains("reptile")).noneMatch(r -> r.contains("?p->")), results.toString());
         assertTrue(results.stream().filter(r -> r.contains("?p->")).allMatch(r -> r.contains("nantes")), results.toString());
+        backend.close();
+    }
+
+    @Test
+    public void walks_are_reproducible_with_a_seed () throws Exception {
+        HDTBackend backend = new HDTBackend(HDTInMemoryDatasetsFactory.triples9());
+        String queryAsString = """
+            SELECT * WHERE {
+                VALUES ?c { <http://nantes> <http://paris> }
+                ?p <http://address> ?c .
+                ?p <http://own> ?a }""";
+        List<List<String>> runs = new java.util.ArrayList<>();
+        for (long seed : new long[]{42L, 42L, 7L}) {
+            // As the server does for a `seed` request parameter.
+            HDTIterator.RNG.set(new java.util.Random(seed));
+            RawOpExecutor<Long, String> executor = new RawOpExecutor<Long, String>().setBackend(backend);
+            executor.getExecutionContext().getContext().set(RawConstants.RANDOM, new java.util.Random(seed));
+            executor.getExecutionContext().getContext().set(RawConstants.ATTEMPT_LIMIT, 50L);
+            List<String> walks = new java.util.ArrayList<>();
+            executor.execute(org.apache.jena.sparql.algebra.Algebra.compile(QueryFactory.create(queryAsString)))
+                    .forEachRemaining(b -> walks.add(b.toString()));
+            runs.add(walks);
+        }
+        assertEquals(runs.get(0), runs.get(1));
+        assertTrue(!runs.get(0).equals(runs.get(2)), "another seed draws other walks");
         backend.close();
     }
 

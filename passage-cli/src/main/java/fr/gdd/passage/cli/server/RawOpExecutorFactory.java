@@ -1,7 +1,9 @@
 package fr.gdd.passage.cli.server;
 
 import fr.gdd.passage.commons.generics.BackendBindings;
+import fr.gdd.passage.blazegraph.BlazegraphIterator;
 import fr.gdd.passage.commons.generics.BackendConstants;
+import fr.gdd.passage.hdt.HDTIterator;
 import fr.gdd.raw.executor.RawConstants;
 import fr.gdd.raw.executor.RawOpExecutor;
 import org.apache.jena.atlas.io.IndentedWriter;
@@ -21,6 +23,7 @@ import org.apache.jena.sparql.serializer.SerializationContext;
 import org.apache.jena.sparql.util.Symbol;
 
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
 
 public class RawOpExecutorFactory implements OpExecutorFactory {
@@ -33,6 +36,7 @@ public class RawOpExecutorFactory implements OpExecutorFactory {
     private static final Symbol userTimeoutSymbol = Symbol.create("timeout");
     private static final Symbol userAttemptsSymbol = Symbol.create("attempts");
     private static final Symbol userBudgetSymbol = Symbol.create("budget"); // HeFQUIN-FRAW's name for attempts
+    private static final Symbol userSeedSymbol = Symbol.create("seed"); // makes the random walks reproducible
 
     public static class OpExecutorWrapper extends OpExecutor {
 
@@ -69,6 +73,19 @@ public class RawOpExecutorFactory implements OpExecutorFactory {
                 ec.getContext().remove(userAttemptsSymbol); // Cleaning up the context
                 long serverAttempts = ec.getContext().getLong(RawConstants.ATTEMPT_LIMIT, Long.MAX_VALUE);
                 ec.getContext().set(RawConstants.ATTEMPT_LIMIT, Math.min(serverAttempts, userAttempts));
+            }
+
+            if (ec.getContext().isDefined(userSeedSymbol)) {
+                try {
+                    long seed = Long.parseLong(ec.getContext().get(userSeedSymbol));
+                    // The walks run on this thread, which the iterators' sources belong to.
+                    HDTIterator.RNG.set(new Random(seed));
+                    BlazegraphIterator.RNG.set(new Random(seed));
+                    ec.getContext().set(RawConstants.RANDOM, new Random(seed));
+                } catch (NumberFormatException e) {
+                    // not a seed: walks stay unseeded
+                }
+                ec.getContext().remove(userSeedSymbol);
             }
 
             Query q = ec.getContext().get(ARQConstants.sysCurrentQuery);
