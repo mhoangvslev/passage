@@ -45,7 +45,7 @@ public abstract class DatasetAssemblerBackend extends DatasetAssembler {
 
     // just in case where a dataset path would be mentioned multiple times, we create a
     // manager that ensures uniqueness in opening files.
-    private final static BackendManager manager = new BackendManager();
+    final static BackendManager manager = new BackendManager(); // shared with GraphAssemblerHDT
 
     static { JenaSystem.init(); }
 
