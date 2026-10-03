@@ -3,6 +3,7 @@ package fr.gdd.passage.hdt;
 import fr.gdd.passage.commons.exceptions.UndefinedCode;
 import fr.gdd.passage.commons.interfaces.BackendIterator;
 import fr.gdd.passage.commons.interfaces.SPOC;
+import org.rdfhdt.hdt.enums.TripleComponentRole;
 import org.rdfhdt.hdt.triples.IteratorTripleID;
 import org.rdfhdt.hdt.triples.TripleID;
 
@@ -36,9 +37,9 @@ public class HDTIterator  extends BackendIterator<Long, String> {
     @Override
     public Long getId(int code) {
         return switch (code) {
-            case SPOC.SUBJECT -> current.getSubject();
-            case SPOC.PREDICATE -> current.getPredicate();
-            case SPOC.OBJECT -> current.getObject();
+            case SPOC.SUBJECT -> backend.toGlobal(current.getSubject(), TripleComponentRole.SUBJECT);
+            case SPOC.PREDICATE -> backend.toGlobal(current.getPredicate(), TripleComponentRole.PREDICATE);
+            case SPOC.OBJECT -> backend.toGlobal(current.getObject(), TripleComponentRole.OBJECT);
             default -> throw new UndefinedCode(code);
         };
     }

@@ -53,6 +53,36 @@ public class RandomHDTTest {
     }
 
     @Test
+    public void an_object_used_as_subject_is_not_another_subject () throws Exception {
+        // HDT numbers subjects and objects apart: the identifier of an object-only
+        // term like <http://nantes> is also the one of some subject-only term.
+        HDTBackend backend = new HDTBackend(HDTInMemoryDatasetsFactory.triples9());
+        String queryAsString = "SELECT * WHERE {?x <http://address> ?c . ?c ?p ?o}";
+
+        var results = RawOpExecutorUtils.executeWithRaw(queryAsString, backend, 1000L);
+        log.debug("{}", results);
+        assertEquals(0, results.size());
+        backend.close();
+    }
+
+    @Test
+    public void values_bind_terms_whatever_their_position () throws Exception {
+        HDTBackend backend = new HDTBackend(HDTInMemoryDatasetsFactory.triples9());
+        String queryAsString = """
+            SELECT * WHERE {
+                VALUES ?a { <http://cat> <http://nantes> }
+                ?p <http://own> ?a .
+                ?a <http://species> ?s }""";
+
+        var results = RawOpExecutorUtils.executeWithRaw(queryAsString, backend, 1000L);
+        log.debug("{}", results);
+        assertEquals(1, results.elementSet().size());
+        assertTrue(MultisetResultChecking.containsAllResults(results, List.of("p", "a", "s"),
+                List.of("Alice", "cat", "feline")));
+        backend.close();
+    }
+
+    @Test
     public void count_of_carthesian_product_bgp () throws Exception {
         HDTBackend backend = new HDTBackend(HDTInMemoryDatasetsFactory.triples9());
         String queryAsString = """
