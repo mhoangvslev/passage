@@ -17,12 +17,23 @@ public class RawOptional<ID, VALUE> implements Iterator<BackendBindings<ID, VALU
     private final Iterator<BackendBindings<ID, VALUE>> leftInput;
     private final Op optionalOp;
     private final ExecutionContext execCxt;
+    private final boolean failOnMiss;
     private Iterator<BackendBindings<ID, VALUE>> currentOptionalResults;
     private BackendBindings<ID, VALUE> nextBinding;
     final Backend<ID, VALUE> backend;
     final BackendCache<ID,VALUE> cache;
 
     public RawOptional(Iterator<BackendBindings<ID, VALUE>> leftInput, Op optionalOp, ExecutionContext execCxt) {
+        this(leftInput, optionalOp, execCxt, false);
+    }
+
+    /**
+     * @param failOnMiss When the optional part does not match, the walk fails
+     *                   instead of going on (`OpLeftJoinFail`).
+     */
+    public RawOptional(Iterator<BackendBindings<ID, VALUE>> leftInput, Op optionalOp, ExecutionContext execCxt,
+                       boolean failOnMiss) {
+        this.failOnMiss = failOnMiss;
         this.leftInput = leftInput;
         this.optionalOp = optionalOp;
         this.execCxt = execCxt;
@@ -40,6 +51,10 @@ public class RawOptional<ID, VALUE> implements Iterator<BackendBindings<ID, VALU
 
         while (leftInput.hasNext()) {
             BackendBindings<ID, VALUE> leftBinding = leftInput.next();
+            if (failOnMiss && leftBinding.isFailed()) {
+                nextBinding = leftBinding; // an earlier step failed: nothing more to bind
+                return true;
+            }
 
             // Evaluate the optional part using the current left binding
             BackendPullExecutor<ID, VALUE> executor = execCxt.getContext().get(BackendConstants.EXECUTOR);
@@ -51,7 +66,7 @@ public class RawOptional<ID, VALUE> implements Iterator<BackendBindings<ID, VALU
                 return true;
             } else {
                 // Optional part did not match, return the left binding as-is
-                nextBinding = leftBinding;
+                nextBinding = failOnMiss ? leftBinding.setFailed() : leftBinding;
                 return true;
             }
         }

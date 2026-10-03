@@ -1,6 +1,7 @@
 package fr.gdd.passage.cli;
 
 import fr.gdd.passage.cli.assemblers.DatasetAssemblerBlazegraph;
+import fr.gdd.passage.cli.assemblers.DatasetAssemblerHDT;
 import fr.gdd.passage.cli.operations.SPARQL_QueryDatasetWithHeaders;
 import fr.gdd.passage.cli.server.PassageOutputWriterJSON;
 import fr.gdd.passage.cli.server.PassageQueryEngine;
@@ -40,6 +41,8 @@ public class PassageModule implements FusekiModule {
 
         AssemblerUtils.addRegistered(PassageVocabulary.DatasetBlazegraph.getModel());
         AssemblerUtils.registerDataset(PassageVocabulary.DatasetBlazegraph, new DatasetAssemblerBlazegraph());
+        AssemblerUtils.addRegistered(PassageVocabulary.DatasetHDT.getModel());
+        AssemblerUtils.registerDataset(PassageVocabulary.DatasetHDT, new DatasetAssemblerHDT());
 
         // Not mandatory but cool feature enabled: reading user-defined args from the request.
         Operation queryWArgs = Operation.alloc(PassageVocabulary.query_w_args.asNode(),

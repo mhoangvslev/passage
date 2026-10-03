@@ -76,7 +76,8 @@ public class RandomValues<ID, VALUE> implements Iterator<BackendBindings<ID, VAL
             });
 
             this.values.add(mappings);
-            if(mappings.isCompatible(current)) this.compatibleValues.add(mappings); // Inefficient TODO : optimize
+            // No input when the walk already failed upstream.
+            if(Objects.nonNull(current) && mappings.isCompatible(current)) this.compatibleValues.add(mappings); // Inefficient TODO : optimize
         });
     }
 
