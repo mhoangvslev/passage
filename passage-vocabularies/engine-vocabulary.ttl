@@ -71,6 +71,11 @@ psg:DatasetHDT rdf:type owl:Class ;
     rdfs:label       "HDT dataset"@en ;
     rdf:comment      "An instance of this class defines a dataset with an HDT backend."@en .
 
+psg:GraphHDT rdf:type owl:Class ;
+    rdfs:subClassOf  ja:Model ;
+    rdfs:label       "HDT graph"@en ;
+    rdfs:comment     "A read-only graph over an HDT file, queried by the standard SPARQL engine, e.g. in a ja:RDFDataset."@en .
+
 
 ## Properties
 

@@ -57,6 +57,9 @@ public class PassageVocabulary {
     
     public static final Resource DatasetHDT = M_MODEL.createResource( "http://fr.gdd.passage/engine-vocabulary#DatasetHDT" );
     
+    /** <p>A read-only graph over an HDT file, queried by the standard SPARQL engine.</p> */
+    public static final Resource GraphHDT = M_MODEL.createResource( "http://fr.gdd.passage/engine-vocabulary#GraphHDT" );
+    
     public static final Resource Operation = M_MODEL.createResource( "http://fr.gdd.passage/engine-vocabulary#Operation" );
     
     /** <p>Class of configuration for the PASSAGE engine.</p> */
