@@ -1,5 +1,6 @@
 package fr.gdd.passage.commons.io;
 
+import fr.gdd.passage.commons.generics.BackendConstants;
 import org.apache.jena.atlas.io.IO;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.json.io.JSWriter;
@@ -72,6 +73,13 @@ public class ExtensibleRowSetWriterJSON implements RowSetWriter {
 
     @Override
     public void write(OutputStream outStream, RowSet rowSet, Context context) {
+        if (Objects.isNull(context) || !context.isDefined(BackendConstants.BACKEND)) {
+            // Not run by a Passage engine (e.g. Jena's own over a psg:GraphHDT):
+            // standard results, which strict parsers (e.g. Oxigraph's) expect to
+            // end after `results`, without a `metadata` field.
+            RowSetWriterJSON.factory.create(ResultSetLang.RS_JSON).write(outStream, rowSet, context);
+            return;
+        }
         IndentedWriter out = new IndentedWriter(outStream);
         try {
             ResultSetWriterTableJSON x = new ResultSetWriterTableJSON(out, context, this.printMissingVariables);
