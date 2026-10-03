@@ -1,5 +1,6 @@
 package fr.gdd.raw.executor;
 
+import fr.gdd.jena.utils.OpLeftJoinFail;
 import fr.gdd.jena.visitors.ReturningArgsOpVisitorRouter;
 import fr.gdd.jena.visitors.ReturningOpVisitorRouter;
 import fr.gdd.passage.commons.CommonsCardinalityJoinOrdering;
@@ -224,6 +225,6 @@ public class RawOpExecutor<ID, VALUE> extends BackendPullExecutor<ID, VALUE> { /
     @Override
     public Iterator<BackendBindings<ID, VALUE>> visit(OpLeftJoin leftJoin, Iterator<BackendBindings<ID, VALUE>> input) {
         Iterator<BackendBindings<ID, VALUE>> leftInput = ReturningArgsOpVisitorRouter.visit(this, leftJoin.getLeft(), input);
-        return new RawOptional<>(leftInput, leftJoin.getRight(), execCxt);
+        return new RawOptional<>(leftInput, leftJoin.getRight(), execCxt, leftJoin instanceof OpLeftJoinFail);
     }
 }

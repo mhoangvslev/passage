@@ -4,6 +4,10 @@ import fr.gdd.passage.commons.utils.MultisetResultChecking;
 import fr.gdd.passage.hdt.HDTBackend;
 import fr.gdd.passage.hdt.datasets.HDTInMemoryDatasetsFactory;
 import fr.gdd.raw.RawOpExecutorUtils;
+import fr.gdd.raw.executor.RawConstants;
+import fr.gdd.raw.executor.RawOpExecutor;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.sparql.ARQConstants;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +83,53 @@ public class RandomHDTTest {
         assertEquals(1, results.elementSet().size());
         assertTrue(MultisetResultChecking.containsAllResults(results, List.of("p", "a", "s"),
                 List.of("Alice", "cat", "feline")));
+        backend.close();
+    }
+
+    @Test
+    public void values_rows_only_extend_the_walks_they_match () throws Exception {
+        HDTBackend backend = new HDTBackend(HDTInMemoryDatasetsFactory.triples9());
+        for (String queryAsString : List.of("""
+            SELECT * WHERE {
+                VALUES ?c { <http://nantes> <http://unknown> <http://paris> }
+                ?p <http://address> ?c .
+                ?p <http://own> ?a .
+                ?a <http://species> ?s }""", """
+            SELECT * WHERE {
+                ?p <http://address> ?c .
+                ?p <http://own> ?a .
+                ?a <http://species> ?s
+                VALUES ?c { <http://nantes> <http://unknown> <http://paris> } }""")) {
+            var results = RawOpExecutorUtils.executeWithRaw(queryAsString, backend, 1000L);
+            log.debug("{}", results);
+            assertEquals(3, results.elementSet().size(), queryAsString);
+            assertTrue(MultisetResultChecking.containsAllResults(results, List.of("p", "c", "a"),
+                    List.of("Alice", "nantes", "cat"),
+                    List.of("Alice", "nantes", "dog"),
+                    List.of("Alice", "nantes", "snake")), queryAsString);
+        }
+        backend.close();
+    }
+
+    @Test
+    public void a_failed_step_ends_the_walk_of_a_select_query () throws Exception {
+        // As served: SELECT queries return failed walks too, each triple pattern
+        // becoming an OpLeftJoinFail, so a step after a failed one must not run.
+        HDTBackend backend = new HDTBackend(HDTInMemoryDatasetsFactory.triples9());
+        String queryAsString = """
+            SELECT * WHERE {
+                VALUES ?c { <http://nantes> <http://reptile> }
+                ?p <http://address> ?c .
+                ?p <http://own> ?a }""";
+        RawOpExecutor<Long, String> executor = new RawOpExecutor<Long, String>().setBackend(backend);
+        executor.getExecutionContext().getContext().set(ARQConstants.sysCurrentQuery, QueryFactory.create(queryAsString));
+        executor.getExecutionContext().getContext().set(RawConstants.ATTEMPT_LIMIT, 1000L);
+
+        var results = RawOpExecutorUtils.execute(queryAsString, executor);
+        log.debug("{}", results);
+        assertTrue(results.stream().anyMatch(r -> r.contains("reptile")));
+        assertTrue(results.stream().filter(r -> r.contains("reptile")).noneMatch(r -> r.contains("?p->")), results.toString());
+        assertTrue(results.stream().filter(r -> r.contains("?p->")).allMatch(r -> r.contains("nantes")), results.toString());
         backend.close();
     }
 

@@ -141,6 +141,7 @@ public class BackendBindings<ID, VALUE> implements Binding {
     final Map<Var, IdValueBackend<ID, VALUE>> var2binding = new HashMap<>();
     BackendBindings<ID, VALUE> parent = null;
     Backend<ID,VALUE> backend;
+    boolean failed = false;
 
     public BackendBindings () {} // TODO to be removed, make backend final
     public BackendBindings(Backend<ID,VALUE> backend) {
@@ -181,6 +182,19 @@ public class BackendBindings<ID, VALUE> implements Binding {
     public BackendBindings<ID, VALUE> setParent(BackendBindings<ID, VALUE> parent) {
         this.parent = parent;
         return this;
+    }
+
+    /**
+     * Marks the random walk producing these bindings as failed: what remains
+     * of it must not bind anything more.
+     */
+    public BackendBindings<ID, VALUE> setFailed() {
+        this.failed = true;
+        return this;
+    }
+
+    public boolean isFailed() {
+        return failed || (Objects.nonNull(parent) && parent.isFailed());
     }
 
     public BackendBindings<ID, VALUE> put(Var var, IdValueBackend<ID, VALUE> entry) {
